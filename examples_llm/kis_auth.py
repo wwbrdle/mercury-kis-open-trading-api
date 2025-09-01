@@ -218,7 +218,6 @@ def auth(svr="prod", product=_cfg["my_prod"], url=None):
     saved_token = read_token()  # 기존 발급 토큰 확인
     # print("saved_token: ", saved_token)
     if saved_token is None:  # 기존 발급 토큰 확인이 안되면 발급처리
-        print('_cfg[svr]', _cfg)
         url = f"{_cfg[svr]}/oauth2/tokenP"
         res = requests.post(
             url, data=json.dumps(p), headers=_getBaseHeader()
