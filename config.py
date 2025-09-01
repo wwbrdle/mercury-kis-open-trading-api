@@ -7,7 +7,7 @@ from functools import lru_cache
 def get_kis_keys():
     if os.getenv("ENV") == "production":
         try:
-            session = boto3.Session(profile_name="mercury")
+            session = boto3.Session()
             ssm = session.client("ssm", region_name="us-east-1")
             return {
                 "my_app": ssm.get_parameter(Name="/kis/my_app", WithDecryption=True)["Parameter"]["Value"],
