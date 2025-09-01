@@ -13,7 +13,6 @@ pyside6-essentials==6.9.1
 python-dateutil==2.9.0.post0
 pytz==2025.2
 pyyaml==6.0.2
-pytest
 requests==2.32.4
 shiboken6==6.9.1
 six==1.17.0
