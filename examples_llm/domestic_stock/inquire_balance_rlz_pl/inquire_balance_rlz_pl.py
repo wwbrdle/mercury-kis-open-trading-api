@@ -12,7 +12,7 @@ import logging
 import pandas as pd
 
 sys.path.extend(['../..', '.'])
-import kis_auth as ka
+from examples_llm import kis_auth as ka
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)

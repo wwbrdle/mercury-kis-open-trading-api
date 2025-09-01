@@ -16,6 +16,8 @@ from io import StringIO
 
 import pandas as pd
 
+from config import get_kis_keys
+
 # pip install requests (패키지설치)
 import requests
 
@@ -32,8 +34,9 @@ from Crypto.Util.Padding import unpad
 clearConsole = lambda: os.system("cls" if os.name in ("nt", "dos") else "clear")
 
 key_bytes = 32
-config_root = os.path.join(os.path.expanduser("~"), "KIS", "config")
-# config_root = "$HOME/KIS/config/"  # 토큰 파일이 저장될 폴더, 제3자가 찾기 어렵도록 경로 설정하시기 바랍니다.
+# config_root = os.path.join(os.path.expanduser("~"), "KIS", "token")
+config_root = os.getcwd() + '/token'
+# config_root = "$HOME/KIS/token/"  # 토큰 파일이 저장될 폴더, 제3자가 찾기 어렵도록 경로 설정하시기 바랍니다.
 # token_tmp = config_root + 'KIS000000'  # 토큰 로컬저장시 파일 이름 지정, 파일이름을 토큰값이 유추가능한 파일명은 삼가바랍니다.
 # token_tmp = config_root + 'KIS' + datetime.today().strftime("%Y%m%d%H%M%S")  # 토큰 로컬저장시 파일명 년월일시분초
 token_tmp = os.path.join(
@@ -46,8 +49,11 @@ if os.path.exists(token_tmp) == False:
 
 # 앱키, 앱시크리트, 토큰, 계좌번호 등 저장관리, 자신만의 경로와 파일명으로 설정하시기 바랍니다.
 # pip install PyYAML (패키지설치)
-with open(os.path.join(config_root, "kis_devlp.yaml"), encoding="UTF-8") as f:
-    _cfg = yaml.load(f, Loader=yaml.FullLoader)
+# with open(os.path.join(config_root, "kis_devlp.yaml"), encoding="UTF-8") as f:
+#     _cfg = yaml.load(f, Loader=yaml.FullLoader)
+
+# mercury - 위의 kis_devlp.yaml를 사용하는 코드를 사용하지 않고 .env에서 _cfg 생성
+_cfg = get_kis_keys()
 
 _TRENV = tuple()
 _last_auth_time = datetime.now()
@@ -212,6 +218,7 @@ def auth(svr="prod", product=_cfg["my_prod"], url=None):
     saved_token = read_token()  # 기존 발급 토큰 확인
     # print("saved_token: ", saved_token)
     if saved_token is None:  # 기존 발급 토큰 확인이 안되면 발급처리
+        print('_cfg[svr]', _cfg)
         url = f"{_cfg[svr]}/oauth2/tokenP"
         res = requests.post(
             url, data=json.dumps(p), headers=_getBaseHeader()
