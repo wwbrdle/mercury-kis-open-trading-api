@@ -24,7 +24,7 @@ jobs:
 
       - name: Creat token directory
         run: |
-          mkdir -p /home/ubuntu/app/token
+          sudo mkdir -p /home/ubuntu/app/token
 
 #      - name: Run tests
 #        run: |
