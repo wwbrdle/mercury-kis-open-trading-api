@@ -22,10 +22,6 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Creat token directory
-        run: |
-          sudo mkdir -p /home/ubuntu/app/token
-
 #      - name: Run tests
 #        run: |
 #          pytest
@@ -42,5 +38,6 @@ jobs:
             git reset --hard origin/prod
             source venv/bin/activate
             pip install -r requirements.txt
+            mkdir -p /home/ubuntu/app/token
             sudo systemctl restart mercury-kis-open-trading-api
 
