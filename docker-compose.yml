@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  mercury-kis-open-trading-api:
+    build: .
+    container_name: mercury-kis-open-trading-api
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./token:/app/token
+      - ./config.py:/app/config.py
+    networks:
+      - mercury-network
+
+networks:
+  mercury-network:
+    driver: bridge
