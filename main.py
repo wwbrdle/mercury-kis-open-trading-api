@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from apis.get_domestic_stock_fluctuation import router as fluctuation_router
 from apis.inquire_balance import router as inquire_balance
 from apis.get_inquire_balance_rlz_pl import router as inquire_balance_rlz_pl
+from apis.get_heartbeat import router as heartbeat_router
 from config import get_kis_keys
 
 def load_config():
@@ -23,6 +24,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(fluctuation_router, prefix="/uapi", tags=["domestic-stock"])
 app.include_router(inquire_balance, prefix="/uapi", tags=["domestic-stock"])
 app.include_router(inquire_balance_rlz_pl, prefix="/uapi", tags=["domestic-stock"])
+app.include_router(heartbeat_router, tags=["system"])
 
 if __name__ == "__main__":
     import uvicorn
