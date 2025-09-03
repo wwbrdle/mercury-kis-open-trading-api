@@ -27,10 +27,21 @@ jobs:
             git fetch --all
             git reset --hard origin/prod
             
+            # 포트 8001 사용 중인 컨테이너 확인
+            echo "포트 8001 사용 중인 컨테이너 확인:"
+            docker ps --format "table {{.Names}}\t{{.Ports}}" | grep 8001 || echo "포트 8001 사용 중인 컨테이너 없음"
+            
             # 기존 컨테이너 상태 확인
             docker-compose ps
             
-            # 우리 앱의 컨테이너만 빌드 및 실행
+            # 포트 충돌이 있다면 기존 컨테이너 중지
+            if docker ps --format "{{.Names}}" | grep -q "mercury_backend"; then
+              echo "기존 mercury_backend 컨테이너 중지 중..."
+              docker stop mercury_backend
+              docker rm mercury_backend
+            fi
+            
+            # 우리 앱의 컨테이너 빌드 및 실행
             docker-compose up -d --build mercury-kis-open-trading-api
             
             # 컨테이너 상태 확인
