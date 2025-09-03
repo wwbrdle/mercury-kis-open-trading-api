@@ -51,17 +51,24 @@ jobs:
             docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
             
             # 우리 앱의 컨테이너 빌드 및 실행 (포트 8001에서)
-            docker-compose up -d
+            docker-compose up -d --build mercury-kis-open-trading-api
             
             # 컨테이너 상태 확인
             docker-compose ps
             
             # 컨테이너 실행 상태 검증
             echo "컨테이너 실행 상태 검증 중..."
+            echo "현재 실행 중인 컨테이너 목록:"
+            docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
+            
             if docker ps --format "{{.Names}}" | grep -q "mercury-kis-open-trading-api"; then
               echo "✅ 배포 성공: mercury-kis-open-trading-api 컨테이너가 정상 실행 중입니다."
+              echo "컨테이너 정보:"
+              docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}" | grep mercury-kis-open-trading-api
             else
               echo "❌ 배포 실패: mercury-kis-open-trading-api 컨테이너가 실행되지 않았습니다."
+              echo "모든 컨테이너 상태:"
+              docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
               echo "컨테이너 로그 확인:"
               docker-compose logs mercury-kis-open-trading-api
               exit 1
