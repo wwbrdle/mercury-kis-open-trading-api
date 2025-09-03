@@ -5,7 +5,10 @@ from functools import lru_cache
 
 @lru_cache(maxsize=1)
 def get_kis_keys():
-    if os.getenv("ENV") == "production":
+    env_value = os.getenv("ENV")
+    print(f"DEBUG: ENV environment variable value: {env_value}")
+    
+    if env_value == "production":
         try:
             session = boto3.Session()
             ssm = session.client("ssm", region_name="us-east-1")
