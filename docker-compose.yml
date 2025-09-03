@@ -5,7 +5,7 @@ services:
     build: .
     container_name: mercury-kis-open-trading-api
     ports:
-      - "8001:8001"
+      - "8001:8001"  # 포트 8001 사용
     restart: unless-stopped
     environment:
       - ENVIRONMENT=production
