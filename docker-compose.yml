@@ -8,6 +8,12 @@ services:
     ports:
       - "8001:8001"  # 포트 8001 사용
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     environment:
       - ENV=production
       - PYTHONPATH=/app
