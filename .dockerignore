@@ -49,7 +49,6 @@ Thumbs.db
 # 프로젝트 특정
 token/*
 !token/.gitkeep
-examples_llm/
 examples_user/
 legacy/
 docs/

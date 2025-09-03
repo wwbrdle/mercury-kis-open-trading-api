@@ -16,6 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 애플리케이션 코드 복사
 COPY . .
 
+# examples_llm 디렉토리가 있는지 확인
+RUN ls -la /app/
+
 # 포트 노출
 EXPOSE 8001
 
