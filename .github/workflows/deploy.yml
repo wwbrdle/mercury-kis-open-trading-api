@@ -35,6 +35,15 @@ jobs:
               git reset --hard origin/prod
             fi
             
+            # 디스크 공간 정리 (빌드 실패 방지)
+            echo "디스크 공간 정리 중..."
+            docker system prune -f
+            docker image prune -f
+            
+            # 디스크 사용량 확인
+            echo "디스크 사용량 확인:"
+            df -h
+            
             # 기존 컨테이너 상태 확인 (건드리지 않음)
             echo "기존 컨테이너 상태:"
             docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
