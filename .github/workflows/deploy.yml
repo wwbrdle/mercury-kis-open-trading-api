@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             # 프로젝트 디렉토리로 이동
-            cd /opt/mercury
+            cd /opt/mercury-kis-open-trading-api
             
             # 최신 코드 가져오기
             git fetch --all
