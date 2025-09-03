@@ -30,12 +30,8 @@ jobs:
             # 기존 컨테이너 상태 확인
             docker-compose ps
             
-            # 환경변수 설정 (DATABASE_URL, API_KEY 오류 방지)
-            export DATABASE_URL=""
-            export API_KEY=""
-            
-            # 새 컨테이너 빌드 및 실행 (기존 컨테이너는 유지)
-            docker-compose up -d --build --no-deps
+            # 우리 앱의 컨테이너만 빌드 및 실행
+            docker-compose up -d --build mercury-kis-open-trading-api
             
             # 컨테이너 상태 확인
             docker-compose ps
