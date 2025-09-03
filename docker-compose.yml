@@ -11,9 +11,11 @@ services:
     environment:
       - ENV=production
       - PYTHONPATH=/app
+      - AWS_PROFILE=default
     volumes:
       - ./token:/app/token
       - ./config.py:/app/config.py
+      - ~/.aws:/root/.aws:ro
     networks:
       - mercury_mercury-network
 
