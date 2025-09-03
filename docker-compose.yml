@@ -15,8 +15,8 @@ services:
       - ./token:/app/token
       - ./config.py:/app/config.py
     networks:
-      - mercury-network
+      - mercury_mercury-network
 
 networks:
-  mercury-network:
-    driver: bridge
+  mercury_mercury-network:
+    external: true
