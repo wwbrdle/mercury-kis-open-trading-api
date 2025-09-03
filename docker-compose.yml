@@ -12,10 +12,11 @@ services:
       - ENV=production
       - PYTHONPATH=/app
       - AWS_PROFILE=default
+      - AWS_DEFAULT_REGION=us-east-1
     volumes:
       - ./token:/app/token
       - ./config.py:/app/config.py
-      - ~/.aws:/root/.aws:ro
+      - /home/ubuntu/.aws:/root/.aws:ro
     networks:
       - mercury_mercury-network
 
