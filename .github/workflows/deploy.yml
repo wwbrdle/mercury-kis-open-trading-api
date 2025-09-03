@@ -37,8 +37,10 @@ jobs:
             
             # 디스크 공간 정리 (빌드 실패 방지)
             echo "디스크 공간 정리 중..."
-            docker system prune -f
-            docker image prune -f
+            docker system prune -a -f
+            docker image prune -a -f
+            docker volume prune -f
+            docker builder prune -a -f
             
             # 디스크 사용량 확인
             echo "디스크 사용량 확인:"

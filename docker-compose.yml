@@ -3,6 +3,8 @@ version: '3.8'
 services:
   mercury-kis-open-trading-api:
     build: .
+    container_name: mercury-kis-open-trading-api
+    image: mercury-kis-open-trading-api:latest
     ports:
       - "8001:8001"  # 포트 8001 사용
     restart: unless-stopped
