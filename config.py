@@ -30,8 +30,8 @@ def get_kis_keys():
     else:
         load_dotenv()
         cfg = {
-            "my_app": os.getenv("KIS_MY_APP"),
-            "my_sec": os.getenv("KIS_MY_SEC"),
+            "my_app": os.getenv("KIS_MY_APP_MOCK"),
+            "my_sec": os.getenv("KIS_MY_SEC_MOCK"),
             "my_htsid": os.getenv("KIS_MY_HTSID"),
             "my_acct_stock": os.getenv("KIS_MY_ACCT_STOCK"),
             "my_prod": os.getenv("KIS_MY_PROD"),
