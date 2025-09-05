@@ -24,7 +24,7 @@ RUN ls -la /app/
 ENV ENV=production
 
 # 포트 노출
-EXPOSE 8001
+EXPOSE 8000
 
 # 애플리케이션 실행 (더 안정적인 설정)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "1", "--log-level", "info", "--access-log"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--log-level", "info", "--access-log"]
