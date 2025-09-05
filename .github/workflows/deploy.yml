@@ -55,6 +55,15 @@ jobs:
             echo "기존 컨테이너 상태:"
             sudo docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
             
+            # Docker 네트워크 확인 및 생성
+            echo "Docker 네트워크 확인 중..."
+            if ! sudo docker network ls | grep -q "mercury_mercury-network"; then
+              echo "mercury_mercury-network 네트워크가 없습니다. 생성 중..."
+              sudo docker network create mercury_mercury-network
+            else
+              echo "mercury_mercury-network 네트워크가 이미 존재합니다."
+            fi
+            
             # 우리 앱의 컨테이너 빌드 및 실행 (포트 8000에서)
             sudo docker compose up -d --build mercury-kis-open-trading-api
             
