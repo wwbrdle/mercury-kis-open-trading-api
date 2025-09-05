@@ -4,7 +4,7 @@ services:
     container_name: mercury-kis-open-trading-api
     image: mercury-kis-open-trading-api:latest
     ports:
-      - "8000:8000"  # 포트 8000 사용
+      - "8000:8000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/heartbeat"]
@@ -15,7 +15,7 @@ services:
     environment:
       - ENV=production
       - PYTHONPATH=/app
-      - AWS_PROFILE=default
+      - AWS_PROFILE=mercury
       - AWS_DEFAULT_REGION=us-east-1
     volumes:
       - ./token:/app/token
