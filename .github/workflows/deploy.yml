@@ -40,7 +40,7 @@ jobs:
               git reset --hard origin/prod
             fi
             
-            # 디스크 공간 정리 (빌드 실패 방지)
+            # 디스크 공간 정리
             echo "디스크 공간 정리 중..."
             sudo docker system prune -a -f
             sudo docker image prune -a -f
