@@ -23,7 +23,7 @@ async def get_heartbeat():
         environment = os.getenv("ENV", "unknown")
         
         return {
-            "status": "healthy",
+            "status": "heartbeat_ok",
             "timestamp": current_time.isoformat(),
             "server_info": {
                 "environment": environment,
@@ -44,19 +44,19 @@ async def get_heartbeat():
         
     except Exception as e:
         return {
-            "status": "error",
+            "status": "heartbeat_error",
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
             "message": "Failed to get server status"
         }
 
-@router.get("/health")
-async def health_check():
+@router.get("/heartbeat/simple")
+async def simple_heartbeat():
     """
-    간단한 헬스체크 엔드포인트
+    간단한 heartbeat 엔드포인트
     """
     return {
-        "status": "ok",
+        "status": "heartbeat_ok",
         "timestamp": datetime.now().isoformat(),
         "service": "mercury-kis-open-trading-api"
     }
