@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # 30분 타임아웃 설정
 
     steps:
       - name: Checkout code
@@ -20,6 +21,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            # 에러 발생 시 즉시 종료
+            set -e
+            
             # Docker 권한 문제 해결
             sudo usermod -aG docker ubuntu
             sudo chmod 666 /var/run/docker.sock
@@ -40,16 +44,48 @@ jobs:
               git reset --hard origin/prod
             fi
             
-            # 디스크 공간 정리
-            echo "디스크 공간 정리 중..."
-            sudo docker system prune -a -f
+            # 디스크 공간 정리 (최적화된 정리)
+            echo "🧹 Docker 시스템 정리 시작..."
+            
+            # 사용하지 않는 컨테이너 정리
+            echo "📦 사용하지 않는 컨테이너 정리 중..."
+            sudo docker container prune -f
+            
+            # 사용하지 않는 이미지 정리
+            echo "🖼️ 사용하지 않는 이미지 정리 중..."
             sudo docker image prune -a -f
+            
+            # 사용하지 않는 네트워크 정리
+            echo "🌐 사용하지 않는 네트워크 정리 중..."
+            sudo docker network prune -f
+            
+            # 사용하지 않는 볼륨 정리
+            echo "💾 사용하지 않는 볼륨 정리 중..."
             sudo docker volume prune -f
+            
+            # 빌드 캐시 정리
+            echo "🗑️ 빌드 캐시 정리 중..."
             sudo docker builder prune -a -f
             
+            # 시스템 전체 정리
+            echo "🧽 시스템 전체 정리 중..."
+            sudo docker system prune -a -f
+            
             # 디스크 사용량 확인
-            echo "디스크 사용량 확인:"
+            echo "📊 디스크 사용량 확인:"
             df -h
+            echo "📊 Docker 디스크 사용량:"
+            sudo docker system df
+            
+            # 디스크 공간 부족 체크
+            available_space=$(df / | awk 'NR==2 {print $4}')
+            if [ "$available_space" -lt 1000000 ]; then  # 1GB 미만
+              echo "❌ 배포 실패: 디스크 공간이 부족합니다. (사용 가능: ${available_space}KB)"
+              echo "디스크 사용량 상세:"
+              df -h
+              exit 1
+            fi
+            echo "✅ 디스크 공간 충분: ${available_space}KB 사용 가능"
             
             # 기존 컨테이너 상태 확인 (건드리지 않음)
             echo "기존 컨테이너 상태:"
@@ -64,64 +100,132 @@ jobs:
               echo "mercury_mercury-network 네트워크가 이미 존재합니다."
             fi
             
-            # 우리 앱의 컨테이너 빌드 및 실행 (포트 8000에서)
-            sudo docker compose up -d --build mercury-kis-open-trading-api
+            # 최적화된 Docker 빌드 및 실행
+            echo "🚀 최적화된 Docker 빌드 시작..."
+            
+            # 기존 mercury-kis-open-trading-api 이미지 제거
+            echo "🗑️ 기존 이미지 제거 중..."
+            sudo docker rmi mercury-kis-open-trading-api:latest 2>/dev/null || true
+            
+            # 빌드 전 추가 정리
+            echo "🧹 빌드 전 추가 정리 중..."
+            sudo docker builder prune -a -f
+            sudo rm -rf /tmp/docker-* 2>/dev/null || true
+            
+            # 최적화된 빌드 실행
+            echo "🔨 Docker 이미지 빌드 중..."
+            if ! sudo docker build \
+                --no-cache \
+                --compress \
+                --memory=2g \
+                --memory-swap=4g \
+                --progress=plain \
+                -t mercury-kis-open-trading-api:latest .; then
+                echo "❌ Docker 빌드 실패!"
+                echo "💡 해결 방법:"
+                echo "1. 디스크 공간 확인"
+                echo "2. Docker 서비스 재시작"
+                echo "3. 빌드 로그 확인"
+                exit 1
+            fi
+            
+            echo "✅ Docker 빌드 성공!"
+            
+            # 이미지 크기 확인
+            echo "📊 빌드된 이미지 정보:"
+            sudo docker images mercury-kis-open-trading-api:latest
+            
+            # 컨테이너 실행
+            echo "🏃 컨테이너 실행 중..."
+            if ! sudo docker compose up -d mercury-kis-open-trading-api; then
+                echo "❌ 컨테이너 실행 실패!"
+                echo "컨테이너 로그 확인:"
+                sudo docker compose logs mercury-kis-open-trading-api
+                exit 1
+            fi
             
             # 컨테이너 상태 확인
+            echo "📋 컨테이너 상태 확인 중..."
             sudo docker compose ps
             
             # 컨테이너 실행 상태 검증
-            echo "컨테이너 실행 상태 검증 중..."
+            echo "🔍 컨테이너 실행 상태 검증 중..."
             echo "현재 실행 중인 컨테이너 목록:"
             sudo docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
             
-            if sudo docker ps --format "{{.Names}}" | grep -q "mercury-kis-open-trading-api"; then
-              echo "✅ 컨테이너가 실행되었습니다. 애플리케이션 상태 확인 중..."
-              
-              # 애플리케이션 시작 대기 (최대 60초)
-              echo "애플리케이션 시작 대기 중..."
-              for i in {1..12}; do
-                echo "시도 $i/12: heartbeat API 확인 중..."
-                if curl -f -s http://localhost:8000/heartbeat > /dev/null 2>&1; then
-                  echo "✅ 애플리케이션이 정상적으로 시작되었습니다!"
-                  break
-                else
-                  echo "애플리케이션이 아직 준비되지 않았습니다. 5초 후 재시도..."
-                  sleep 5
-                fi
-                
-                if [ $i -eq 12 ]; then
-                  echo "❌ 배포 실패: 애플리케이션이 60초 내에 시작되지 않았습니다."
-                  echo "컨테이너 로그 확인:"
-                  sudo docker compose logs --tail=50 mercury-kis-open-trading-api
-                  exit 1
-                fi
-              done
-              
-              # 최종 heartbeat 확인
-              echo "최종 heartbeat 확인 중..."
-              heartbeat_response=$(curl -s http://localhost:8000/heartbeat)
-              if echo "$heartbeat_response" | grep -q "heartbeat_ok"; then
-                echo "✅ 배포 성공: mercury-kis-open-trading-api가 정상적으로 실행 중입니다."
-                echo "컨테이너 정보:"
-                sudo docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}" | grep mercury-kis-open-trading-api
-                echo "Heartbeat 응답:"
-                echo "$heartbeat_response"
+            # 컨테이너가 실행 중인지 확인
+            if ! sudo docker ps --format "{{.Names}}" | grep -q "mercury-kis-open-trading-api"; then
+                echo "❌ 배포 실패: mercury-kis-open-trading-api 컨테이너가 실행되지 않았습니다."
+                echo "모든 컨테이너 상태:"
+                sudo docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+                echo "컨테이너 로그 확인:"
+                sudo docker compose logs mercury-kis-open-trading-api
+                exit 1
+            fi
+            
+            # 컨테이너가 정상적으로 실행 중인지 확인
+            echo "✅ 컨테이너가 실행되었습니다. 애플리케이션 상태 확인 중..."
+            
+            # 컨테이너가 정상적으로 시작되었는지 추가 확인
+            sleep 10  # 컨테이너 시작 대기
+            if ! sudo docker ps --format "{{.Names}}" | grep -q "mercury-kis-open-trading-api"; then
+                echo "❌ 배포 실패: 컨테이너가 시작 후 종료되었습니다."
+                echo "컨테이너 로그 확인:"
+                sudo docker compose logs --tail=50 mercury-kis-open-trading-api
+                exit 1
+            fi
+            # 애플리케이션 시작 대기 (최대 60초)
+            echo "⏳ 애플리케이션 시작 대기 중..."
+            for i in {1..12}; do
+              echo "시도 $i/12: heartbeat API 확인 중..."
+              if curl -f -s http://localhost:8000/heartbeat > /dev/null 2>&1; then
+                echo "✅ 애플리케이션이 정상적으로 시작되었습니다!"
+                break
               else
-                echo "❌ 배포 실패: heartbeat API가 정상적으로 응답하지 않습니다."
-                echo "Heartbeat 응답:"
-                echo "$heartbeat_response"
+                echo "애플리케이션이 아직 준비되지 않았습니다. 5초 후 재시도..."
+                sleep 5
+              fi
+              
+              if [ $i -eq 12 ]; then
+                echo "❌ 배포 실패: 애플리케이션이 60초 내에 시작되지 않았습니다."
                 echo "컨테이너 로그 확인:"
                 sudo docker compose logs --tail=50 mercury-kis-open-trading-api
                 exit 1
               fi
-            else
-              echo "❌ 배포 실패: mercury-kis-open-trading-api 컨테이너가 실행되지 않았습니다."
-              echo "모든 컨테이너 상태:"
-              sudo docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            done
+              
+            # 최종 heartbeat 확인
+            echo "🔍 최종 heartbeat 확인 중..."
+            heartbeat_response=$(curl -s http://localhost:8000/heartbeat)
+            if [ $? -ne 0 ] || ! echo "$heartbeat_response" | grep -q "heartbeat_ok"; then
+              echo "❌ 배포 실패: heartbeat API가 정상적으로 응답하지 않습니다."
+              echo "Heartbeat 응답:"
+              echo "$heartbeat_response"
               echo "컨테이너 로그 확인:"
-              sudo docker compose logs mercury-kis-open-trading-api
+              sudo docker compose logs --tail=50 mercury-kis-open-trading-api
               exit 1
+            fi
+            
+            echo "✅ 배포 성공: mercury-kis-open-trading-api가 정상적으로 실행 중입니다."
+            echo "컨테이너 정보:"
+            sudo docker ps --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}" | grep mercury-kis-open-trading-api
+            echo "Heartbeat 응답:"
+            echo "$heartbeat_response"
+            
+            # 추가 API 테스트 (KIS API 연결 확인)
+            echo "🔍 KIS API 연결 테스트 중..."
+            api_response=$(curl -s http://localhost:8000/uapi/domestic-stock/v1/ranking/fluctuation)
+            if echo "$api_response" | grep -q "EGW00123"; then
+              echo "⚠️ 경고: KIS API 토큰이 만료되었습니다. 토큰 갱신이 필요합니다."
+              echo "API 응답:"
+              echo "$api_response"
+            elif echo "$api_response" | grep -q "error\|Error\|ERROR"; then
+              echo "❌ 배포 실패: KIS API 연결에 문제가 있습니다."
+              echo "API 응답:"
+              echo "$api_response"
+              exit 1
+            else
+              echo "✅ KIS API 연결 정상"
             fi
             
             # 로그 확인

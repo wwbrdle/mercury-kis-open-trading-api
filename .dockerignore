@@ -19,7 +19,6 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
-.git
 .mypy_cache
 .pytest_cache
 .hypothesis
@@ -46,20 +45,28 @@ env
 ehthumbs.db
 Thumbs.db
 
-# 프로젝트 특정
-token/*
-!token/.gitkeep
+# 프로젝트 특정 - 불필요한 파일들 제외
+token/
 examples_user/
 legacy/
 docs/
 *.md
 scripts/
 .github/
+pyproject.toml
+uv.lock
+kis_devlp.yaml
 
 # 로그 파일
 *.log
 logs/
+*_logs/
 
 # 임시 파일
 *.tmp
 *.temp
+
+# Docker 관련
+Dockerfile
+.dockerignore
+docker-compose.yml
