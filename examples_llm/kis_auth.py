@@ -43,6 +43,11 @@ token_tmp = os.path.join(
     config_root, f"KIS{datetime.today().strftime("%Y%m%d")}"
 )  # 토큰 로컬저장시 파일명 년월일
 
+# 토큰 폴더가 없으면 생성
+if not os.path.exists(config_root):
+    os.makedirs(config_root, exist_ok=True)
+    print(f"Created token directory: {config_root}")
+
 # 접근토큰 관리하는 파일 존재여부 체크, 없으면 생성
 if os.path.exists(token_tmp) == False:
     f = open(token_tmp, "w+")
@@ -417,7 +422,7 @@ class APIRespError(APIResp):
 
 
 def _url_fetch(
-        api_url, ptr_id, tr_cont, params, appendHeaders=None, postFlag=False, hashFlag=True
+        api_url, ptr_id, tr_cont, params, appendHeaders=None, postFlag=False, hashFlag=True, retry_count=0
 ):
     url = f"{getTREnv().my_url}{api_url}"
 
@@ -452,6 +457,25 @@ def _url_fetch(
 
     if res.status_code == 200:
         ar = APIResp(res)
+        
+        # 토큰 만료 에러 체크 (EGW00123: 기간이 만료된 token)
+        if not ar.isOK() and ar.getErrorCode() == "EGW00123" and retry_count < 1:
+            print(f"Token expired detected (EGW00123). Refreshing token and retrying... (attempt {retry_count + 1})")
+            
+            # 토큰 파일 삭제하여 강제 갱신
+            try:
+                if os.path.exists(token_tmp):
+                    os.remove(token_tmp)
+                    print(f"Removed expired token file: {token_tmp}")
+            except Exception as e:
+                print(f"Error removing token file: {e}")
+            
+            # 토큰 재발급
+            auth("prod" if not isPaperTrading() else "vps", _cfg["my_prod"])
+            
+            # 재시도 (최대 1회)
+            return _url_fetch(api_url, ptr_id, tr_cont, params, appendHeaders, postFlag, hashFlag, retry_count + 1)
+        
         if _DEBUG:
             ar.printAll()
         return ar
