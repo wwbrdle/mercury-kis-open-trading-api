@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from datetime import datetime
 import psutil
 import os
@@ -6,10 +6,15 @@ import os
 router = APIRouter()
 
 @router.get("/heartbeat")
-async def get_heartbeat():
+async def get_heartbeat(response: Response):
     """
     서버 상태를 확인하는 heartbeat 엔드포인트
     """
+    # 캐시 방지 헤더 설정
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    
     try:
         # 시스템 정보 수집
         cpu_percent = psutil.cpu_percent(interval=1)
@@ -51,10 +56,15 @@ async def get_heartbeat():
         }
 
 @router.get("/heartbeat/simple")
-async def simple_heartbeat():
+async def simple_heartbeat(response: Response):
     """
     간단한 heartbeat 엔드포인트
     """
+    # 캐시 방지 헤더 설정
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    
     return {
         "status": "heartbeat_ok",
         "timestamp": datetime.now().isoformat(),
